@@ -290,7 +290,7 @@ function App() {
           else return val;
         }))}}>
           <MaxMillionImg src = {maxmillions}></MaxMillionImg>
-          <h3>Click to check</h3>
+          {(showMaxMillion[idx])?<h3>Show Less</h3>:<h3>Click to check</h3>}
         </MaxMillionHeader>
         {(showMaxMillion[idx] == true)?
           <div>
