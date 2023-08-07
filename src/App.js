@@ -8,12 +8,24 @@ import maxmillions from './maxmillions.png'
 import lottomax from './lottomax.png'
 function App() {
   const WinningErrorPoints = [false, false, false, false, false, false, false]
+  const MainDivLoading = styled.div`
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content:center;
+    text-align: center;
+  `
   const MainDiv = styled.div`
     height: 100%;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content:center;
     text-align: center;
+  `
+  const Title = styled.h1`
+    margin: 20px;
   `
   const UserNumbersDiv = styled.div`
     display: flex;
@@ -80,6 +92,19 @@ function App() {
     }
   
   `
+  const Loading = styled.div`
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  margin: 20px;
+  animation: spin 2s linear infinite;
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`
   const WinningNumbersContainer = styled.div`
     margin:25px 0px;
   `
@@ -132,12 +157,32 @@ function App() {
     width:80px;
     height:30px;
   `
+  const PrizeSummaryDiv = styled.div`
+  
+  `
+  const PrizeHeader = styled.div`
+  
+  `
+  const PrizeDiv = styled.div`
+    
+  `
+  const PrizeEventDiv = styled.div`
+  display:flex;
+    
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  `
+  const PrizeTotalDiv = styled.div`
+  
+  `
   //const lottoData = [{date:"Bruh",Number:[1,2,3,4,5,6,7], bonusNum: 8},{date:"Bruh2",Number:[0,1,2,3,4,5,6],bonusNum:7}, {date:"Bruh3",Number:[0,0,0,0,0,0,0],bonusNum:5}];
   const {data,error,loading} = useFetch("https://coconut-awake-helicona.glitch.me/numbers/")
   const lottoData = data;
 
   const [userNumbers, setUserNumbers] = useState([]);
   const [resultNumbers, setResultNumbers] = useState([]);
+  const [winnings,setWinnings] = useState([]);
   const [showMaxMillion, setShowMaxMillion] = useState(new Array(104).fill(false));
   const readUserNumbers = (e) =>{
     e.preventDefault()
@@ -172,7 +217,8 @@ function App() {
   }
   const checkUserNumbers =()=> {
     let res = [];
-    
+    let userNumberWinnings = userNumbers.map((x)=> {return {number: x,winningEvents:[],winningAmount:0,freePlays: 0}});
+
     console.log(userNumbers)
      for(let tes = 0; tes < lottoData.length;tes++){
       let error = false;
@@ -183,8 +229,12 @@ function App() {
       
       let test = lottoData[tes].Number.sort((a,b)=> a-b);
       let bonusNum = lottoData[tes].bonusNum
+      let prizeDis = lottoData[tes].prizeDis.map((val)=> (val != null)?val.replaceAll("\n","").replaceAll("\t","").replaceAll("+",""):null);
+      console.log(prizeDis);
       console.log(test);
       for(let x1 = 0;x1 <userNumbers.length;x1++){
+        let correctNumbers = 0;
+        let bonus = 0;
         let x = userNumbers[x1];
         console.log(x);
         let flag = false;
@@ -197,10 +247,12 @@ function App() {
           errorNumbers.push(x);
         }else{
           let nIdx = 0;
+          
           for(let i = 0; i<x.length;i++){
             if(x[i] == bonusNum){
               colorPoints[i] = 2;
               flag = true;
+              bonus = 1;
             }else{
               while(nIdx < 6 && test[nIdx] < x[i])nIdx++;
               if(x[i] != test[nIdx]){
@@ -208,9 +260,11 @@ function App() {
                 flag = true;
               }else{
                 colorPoints[i] = 0;
+                correctNumbers++;
               }
             }
           }
+          
         }
         if(!error && flag){
           losingNumbers.push(x);
@@ -219,6 +273,13 @@ function App() {
         }
         if(!flag){
           winningNumbers.push(x);
+        }
+        if(prizeDis[15-2*correctNumbers+bonus] != null && prizeDis[15-2*correctNumbers+bonus] != undefined){
+          userNumberWinnings[x1].winningEvents.push({date:lottoData[tes].date,MaxMillion:false,losingErrorPoints:[...colorPoints],win:prizeDis[15-2*correctNumbers+bonus]});
+          userNumberWinnings[x1].winningAmount += parseFloat(prizeDis[15-2*correctNumbers+bonus]);
+        }else if(correctNumbers == 3 && bonus == 0){
+          userNumberWinnings[x1].winningEvents.push({date:lottoData[tes].date,MaxMillion:false,losingErrorPoints:[...colorPoints],win:"Free Play"});
+          userNumberWinnings[x1].freePlays++;
         }
       }
       let MMR = [];
@@ -263,6 +324,8 @@ function App() {
           }
           if(!flag){
             winningNumbersM.push(x);
+            userNumberWinnings[x1].winningEvents.push({date:lottoData[tes].date,MaxMillion:true,losingErrorPoints:colorPoints,win:1000000});
+            userNumberWinnings[x1].winningAmount += 1000000;
           }
         }
         MMR.push({maxMillionNum: MMN,error,winningNumbers:winningNumbersM, losingNumbers:losingNumbersM, losingErrorPoints:losingErrorPointsM,errorNumbers:errorNumbersM });
@@ -271,9 +334,29 @@ function App() {
      }
      console.log(res);
      setResultNumbers(res);
+     setWinnings(userNumberWinnings);
   }
   console.log(resultNumbers)
   const displayNumbers = userNumbers.map((x) => <Number data = {{number:x}}></Number>)
+  const winningsComp = winnings.map((x)=>{
+    return (
+    <div>
+      <PrizeHeader>
+        <Number data = {{number:x.number}}></Number>
+      </PrizeHeader>
+      <PrizeDiv>
+        {x.winningEvents.map((xx,idx)=>{
+          return(
+          <PrizeEventDiv>
+            {(xx.MaxMillion)?<MaxMillionImg src = {maxmillions}></MaxMillionImg>:<LottoMaxImg src = {lottomax}></LottoMaxImg>}
+            <Number data = {{number:x.number , errorPoints:xx.losingErrorPoints}}/>
+            <h4>{xx.win}</h4>
+          </PrizeEventDiv>)
+        })}
+      </PrizeDiv>
+    </div>)
+  })
+  console.log(winnings)
   const result = resultNumbers.map((x,idx)=>
     <ResultDateDiv>
       <ResultNumbersHeader>
@@ -322,6 +405,9 @@ function App() {
   return (
     <div className="App">
       {!loading&& !error &&  <MainDiv>
+        <Title>
+          Lotto Max Checker
+        </Title>
         <UserInputDiv>
           <h3>Upload Numbers Here</h3>
           <input type='file' onChange={(e) => readUserNumbers(e)}></input>
@@ -330,12 +416,18 @@ function App() {
         <UserNumbersDiv>
           <UserNumbersTitle>Your Numbers</UserNumbersTitle>
           <UserDataDiv>
+            
             {displayNumbers}
           </UserDataDiv>
         </UserNumbersDiv>
         <Button onClick = {checkUserNumbers}>
           Check Winners
         </Button>
+        {(winningsComp.length != 0)&&
+        <UserNumbersDiv>
+          <h2>Your Prize Winnings</h2>
+          {winningsComp}
+        </UserNumbersDiv>}
         <WinningNumbersContainer>
           {result.length != 0 && <a><WinningNumberTitle><h2>Winning Numbers</h2></WinningNumberTitle>
           <ResultNumbersDiv>
@@ -343,13 +435,14 @@ function App() {
           </ResultNumbersDiv></a>}
         </WinningNumbersContainer>
       </MainDiv> }
-      {loading && !error && <MainDiv>
+      {loading && !error && <MainDivLoading>
         App is Loading...  
-      </MainDiv>}
-      {error && <MainDiv>
+        <Loading></Loading>
+      </MainDivLoading>}
+      {error && <MainDivLoading>
         <ErrorImg src = "https://i.kym-cdn.com/entries/icons/facebook/000/029/535/Screen_Shot_2019-05-01_at_11.08.09_AM.jpg"></ErrorImg>
         <h3>cannot connect to servers</h3>
-        </MainDiv>} 
+        </MainDivLoading>} 
     </div>
   );
 }
