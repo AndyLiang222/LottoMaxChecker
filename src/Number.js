@@ -35,7 +35,7 @@ function Number(props){
           else return (errorPoints[index])?<ErrorNumberDiv>{x}</ErrorNumberDiv>: <CorrectNumberDiv>{x}</CorrectNumberDiv>;
         }
     });
-    if(bonusNum != undefined && bonusNum != 0)numbers.push(<BonusNumberDiv>{bonusNum}</BonusNumberDiv>)
+    if(bonusNum != undefined && numbers != undefined && bonusNum != 0)numbers.push(<BonusNumberDiv>{bonusNum}</BonusNumberDiv>)
     return (
       <UserNumberDiv>
         {numbers}

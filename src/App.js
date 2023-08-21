@@ -6,6 +6,8 @@ import styled from 'styled-components';
 import Number from './Number'
 import maxmillions from './maxmillions.png'
 import lottomax from './lottomax.png'
+import NumberSelector from './NumberSelector';
+import Ticket from './Ticket';
 function App() {
   const WinningErrorPoints = [false, false, false, false, false, false, false]
   const MainDivLoading = styled.div`
@@ -176,14 +178,44 @@ function App() {
   const PrizeTotalDiv = styled.div`
   
   `
+  const RemoveHeader = styled.h2`
+    color: red;
+  `
   //const lottoData = [{date:"Bruh",Number:[1,2,3,4,5,6,7], bonusNum: 8},{date:"Bruh2",Number:[0,1,2,3,4,5,6],bonusNum:7}, {date:"Bruh3",Number:[0,0,0,0,0,0,0],bonusNum:5}];
-  const {data,error,loading} = useFetch("https://coconut-awake-helicona.glitch.me/numbers/")
-  const lottoData = data;
-
-  const [userNumbers, setUserNumbers] = useState([]);
+  //const {data,error,loading} = useFetch("https://coconut-awake-helicona.glitch.me/numbers/")
+ // const lottoData = data;
+  let savedVal = [];
+  try{
+    savedVal = JSON.parse(localStorage.getItem("tickets"));
+  }catch{
+    savedVal = [];
+  }
+  console.log("Load" + localStorage.getItem("tickets"));
+  console.log(savedVal)
+  const [userNumbers, setUserNumbers] = useState((Array.isArray(savedVal))?savedVal:[]);
+  console.log(userNumbers);
   const [resultNumbers, setResultNumbers] = useState([]);
   const [winnings,setWinnings] = useState([]);
+  const [displayResults, setDisplayResults] = useState(false);
   const [showMaxMillion, setShowMaxMillion] = useState(new Array(104).fill(false));
+
+  // const {data,error,loading} = useFetch("http://localhost:5000/numbers/"+Ticket.time+"/" +Ticket.plays);
+  // if(!loading) console.log(data + "test" + error);
+  function newTicket(ticket){
+    let newUserNumbers = [...userNumbers];
+    newUserNumbers.push(ticket);
+    setUserNumbers(newUserNumbers);
+    console.log("Save" + JSON.stringify(newUserNumbers));
+    localStorage.setItem("tickets", JSON.stringify(newUserNumbers));
+  }
+  function removeTicket(i){
+    userNumbers.pop(i);
+    let newUserNumbers = [...userNumbers];
+    console.log("removed");
+    console.log(newUserNumbers)
+    setUserNumbers(newUserNumbers);
+    localStorage.setItem("tickets", JSON.stringify(newUserNumbers));
+  }
   const readUserNumbers = (e) =>{
     e.preventDefault()
     const reader = new FileReader();
@@ -215,11 +247,20 @@ function App() {
     }
 
   }
-  const checkUserNumbers =()=> {
+  const onCheckWinnings = ()=>{
+    
+    setDisplayResults(true);
+  }
+  /**
+  const checkUserNumbers =(Ticket)=> {
     let res = [];
+    let userNumbers = Ticket.numbers;
     let userNumberWinnings = userNumbers.map((x)=> {return {number: x,winningEvents:[],winningAmount:0,freePlays: 0}});
 
     console.log(userNumbers)
+    const {data,error,loading} = useFetch("http://localhost:5000/numbers/",{purDate: Ticket.time, plays:Ticket.plays});
+    if(loading)return;
+    let lottoData = data;
      for(let tes = 0; tes < lottoData.length;tes++){
       let error = false;
       let winningNumbers = [];
@@ -333,12 +374,29 @@ function App() {
       res.push({lottoDate: lottoData[tes].date,bonusNum: lottoData[tes].bonusNum,lottoNumber:lottoData[tes].Number,error,winningNumbers, losingNumbers, losingErrorPoints, errorNumbers,MMR})
      }
      console.log(res);
-     setResultNumbers(res);
-     setWinnings(userNumberWinnings);
+     
+     return {numberResult:res, numberWinnings: userNumberWinnings};
   }
   console.log(resultNumbers)
-  const displayNumbers = userNumbers.map((x) => <Number data = {{number:x}}></Number>)
-  const winningsComp = winnings.map((x)=>{
+  */
+  const resultTickets = userNumbers.map((x)=> <Ticket data = {{Ticket:x}}></Ticket>)
+  const displayTickets = userNumbers.map((x, idx) =>{
+    let nums = x.numbers.map((val)=> <Number data = {{number:val}}></Number>)
+
+    return(
+      <UserNumbersDiv>
+        <UserNumbersTitle>{x.parsedTime + " - " + x.plays +"x"}</UserNumbersTitle>
+        <UserDataDiv>
+          {nums}
+        </UserDataDiv>
+        <RemoveHeader onClick = {()=> removeTicket(idx)}>Remove</RemoveHeader>
+      </UserNumbersDiv>
+      
+    )
+  })
+  /**
+  const winningsComp = winnings.map((val)=>{
+    let x = val.numberWinnings
     return (
     <div>
       <PrizeHeader>
@@ -355,9 +413,11 @@ function App() {
         })}
       </PrizeDiv>
     </div>)
-  })
+  })**/
   console.log(winnings)
-  const result = resultNumbers.map((x,idx)=>
+  /**const result = resultNumbers.map((valll,idx)=>{
+    let x = valll.numberResult;
+    return(
     <ResultDateDiv>
       <ResultNumbersHeader>
       <LottoMaxImg src = {lottomax}></LottoMaxImg>
@@ -400,11 +460,13 @@ function App() {
         }
       </MaxMillionDiv>
     </ResultDateDiv>
-  )
-  console.log(lottoData);
+    )
+    }
+  )**/
+  //console.log(lottoData);
   return (
     <div className="App">
-      {!loading&& !error &&  <MainDiv>
+      {  <MainDiv>
         <Title>
           Lotto Max Checker
         </Title>
@@ -413,17 +475,13 @@ function App() {
           <input type='file' onChange={(e) => readUserNumbers(e)}></input>
         </UserInputDiv>
         
-        <UserNumbersDiv>
-          <UserNumbersTitle>Your Numbers</UserNumbersTitle>
-          <UserDataDiv>
-            
-            {displayNumbers}
-          </UserDataDiv>
-        </UserNumbersDiv>
-        <Button onClick = {checkUserNumbers}>
+        {displayTickets}
+
+        
+        <Button onClick = {onCheckWinnings}>
           Check Winners
         </Button>
-        {(winningsComp.length != 0)&&
+        {/* {(winningsComp.length != 0)&&
         <UserNumbersDiv>
           <h2>Your Prize Winnings</h2>
           {winningsComp}
@@ -433,16 +491,20 @@ function App() {
           <ResultNumbersDiv>
             {result}
           </ResultNumbersDiv></a>}
-        </WinningNumbersContainer>
+        </WinningNumbersContainer> */}
+        {displayResults && resultTickets}
+        <UserNumbersDiv>
+          <NumberSelector data={{newTicket}}></NumberSelector>
+        </UserNumbersDiv>
       </MainDiv> }
-      {loading && !error && <MainDivLoading>
+      {/* {loading && !error && <MainDivLoading>
         App is Loading...  
         <Loading></Loading>
       </MainDivLoading>}
       {error && <MainDivLoading>
         <ErrorImg src = "https://i.kym-cdn.com/entries/icons/facebook/000/029/535/Screen_Shot_2019-05-01_at_11.08.09_AM.jpg"></ErrorImg>
         <h3>cannot connect to servers</h3>
-        </MainDivLoading>} 
+        </MainDivLoading>}  */}
     </div>
   );
 }
