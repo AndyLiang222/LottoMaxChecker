@@ -470,10 +470,10 @@ function App() {
         <Title>
           Lotto Max Checker
         </Title>
-        <UserInputDiv>
+        {/* <UserInputDiv>
           <h3>Upload Numbers Here</h3>
           <input type='file' onChange={(e) => readUserNumbers(e)}></input>
-        </UserInputDiv>
+        </UserInputDiv> */}
         
         {displayTickets}
 

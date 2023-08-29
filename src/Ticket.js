@@ -9,6 +9,19 @@ import NumberSelector from './NumberSelector';
 
 function Ticket (props){
     const WinningErrorPoints = [false, false, false, false, false, false, false]
+    const Loading = styled.div`
+  border: 16px solid #f3f3f3; /* Light grey */
+  border-top: 16px solid #3498db; /* Blue */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  margin: 20px;
+  animation: spin 2s linear infinite;
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+  }
+`
   const MainDivLoading = styled.div`
     height: 100vh;
     display: flex;
@@ -109,7 +122,11 @@ function Ticket (props){
   
   `
   const PrizeHeader = styled.div`
-  
+  display:flex;
+    
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   `
   const PrizeDiv = styled.div`
     
@@ -129,7 +146,7 @@ function Ticket (props){
   const {Ticket} = props.data;
   const {data,error,loading} = useFetch("https://coconut-awake-helicona.glitch.me/numbers/"+Ticket.time+"/" +Ticket.plays);
   let res = [];
-  let userNumberWinnings = [];
+  let ticketWinnings = [];
   console.log(data)
   if(!loading){
     
@@ -251,13 +268,16 @@ function Ticket (props){
         MMR.push({maxMillionNum: MMN,error,winningNumbers:winningNumbersM, losingNumbers:losingNumbersM, losingErrorPoints:losingErrorPointsM,errorNumbers:errorNumbersM });
         }
         res.push({lottoDate: lottoData[tes].date,bonusNum: lottoData[tes].bonusNum,lottoNumber:lottoData[tes].number,error,winningNumbers, losingNumbers, losingErrorPoints, errorNumbers,MMR})
-        }
+        ticketWinnings = (userNumberWinnings);
+      }
         console.log(res);
         
        
-    }
-    const winningsComp = userNumberWinnings.map((x)=>{
-        
+    } 
+    console.log("ticketwinings:")
+    console.log(ticketWinnings)
+    const winningsComp = (ticketWinnings.length == 0)?[]: ticketWinnings.map((x)=>{
+        console.log(x.winningEvents)
         return (
         <div>
           <PrizeHeader>
@@ -327,7 +347,7 @@ function Ticket (props){
         <UserNumbersDiv>
             <h1>{Ticket.parsedTime}</h1>
             
-            {display &&
+            {display && !loading &&
             <div>
             <div>
                 <h2>Winnings</h2>
@@ -339,7 +359,9 @@ function Ticket (props){
             </div>
             </div>
             }
-            
+            {display && loading &&
+              <Loading></Loading>
+            }
             {(display)?
             <h3 onClick={()=> setDisplay(false)}>Show Less</h3>:
             <h3 onClick= {()=> setDisplay(true)}>Show More</h3>
