@@ -192,6 +192,7 @@ function App() {
   }
   console.log("Load" + localStorage.getItem("tickets"));
   console.log(savedVal)
+  const {data, loading, error} = useFetch("https://coconut-awake-helicona.glitch.me/numbers/updateRecent")
   const [userNumbers, setUserNumbers] = useState((Array.isArray(savedVal))?savedVal:[]);
   console.log(userNumbers);
   const [resultNumbers, setResultNumbers] = useState([]);
@@ -251,6 +252,7 @@ function App() {
     
     setDisplayResults(true);
   }
+  
   /**
   const checkUserNumbers =(Ticket)=> {
     let res = [];
@@ -470,6 +472,9 @@ function App() {
         <Title>
           Lotto Max Checker
         </Title>
+        <h2>
+          {loading?"Refreshing Data...": "Data Updated"}
+        </h2>
         {/* <UserInputDiv>
           <h3>Upload Numbers Here</h3>
           <input type='file' onChange={(e) => readUserNumbers(e)}></input>
